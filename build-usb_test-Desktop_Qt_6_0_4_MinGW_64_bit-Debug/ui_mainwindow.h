@@ -53,7 +53,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(284, 334);
+        MainWindow->resize(285, 296);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         but_sel_rbf = new QPushButton(centralwidget);
@@ -62,12 +62,12 @@ public:
         area_log = new QScrollArea(centralwidget);
         area_log->setObjectName(QString::fromUtf8("area_log"));
         area_log->setEnabled(false);
-        area_log->setGeometry(QRect(290, 10, 281, 291));
+        area_log->setGeometry(QRect(290, 10, 281, 241));
         area_log->setLineWidth(2);
         area_log->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName(QString::fromUtf8("scrollAreaWidgetContents"));
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 279, 289));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 279, 239));
         area_log->setWidget(scrollAreaWidgetContents);
         RBF_path = new QLabel(centralwidget);
         RBF_path->setObjectName(QString::fromUtf8("RBF_path"));
@@ -80,13 +80,13 @@ public:
         tb_rbf_path->setGeometry(QRect(12, 30, 181, 20));
         but_prog = new QPushButton(centralwidget);
         but_prog->setObjectName(QString::fromUtf8("but_prog"));
-        but_prog->setGeometry(QRect(10, 230, 91, 23));
+        but_prog->setGeometry(QRect(10, 200, 91, 23));
         but_test = new QPushButton(centralwidget);
         but_test->setObjectName(QString::fromUtf8("but_test"));
-        but_test->setGeometry(QRect(10, 270, 75, 23));
+        but_test->setGeometry(QRect(10, 240, 75, 23));
         progress_com = new QProgressBar(centralwidget);
         progress_com->setObjectName(QString::fromUtf8("progress_com"));
-        progress_com->setGeometry(QRect(100, 270, 181, 23));
+        progress_com->setGeometry(QRect(100, 240, 181, 23));
         progress_com->setValue(24);
         HEX_path = new QLabel(centralwidget);
         HEX_path->setObjectName(QString::fromUtf8("HEX_path"));
@@ -104,7 +104,7 @@ public:
         chbox_def_path->setFont(font);
         groupBox = new QGroupBox(centralwidget);
         groupBox->setObjectName(QString::fromUtf8("groupBox"));
-        groupBox->setGeometry(QRect(10, 150, 161, 51));
+        groupBox->setGeometry(QRect(10, 140, 161, 51));
         groupBox->setFont(font);
         radBut_16bit = new QRadioButton(groupBox);
         radBut_16bit->setObjectName(QString::fromUtf8("radBut_16bit"));
@@ -116,7 +116,7 @@ public:
         radBut_32bit->setGeometry(QRect(90, 20, 51, 17));
         chbox_show_log = new QCheckBox(centralwidget);
         chbox_show_log->setObjectName(QString::fromUtf8("chbox_show_log"));
-        chbox_show_log->setGeometry(QRect(200, 230, 81, 21));
+        chbox_show_log->setGeometry(QRect(200, 200, 81, 21));
         MainWindow->setCentralWidget(centralwidget);
         groupBox->raise();
         but_sel_rbf->raise();
@@ -136,7 +136,7 @@ public:
         MainWindow->setStatusBar(statusbar);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 284, 21));
+        menubar->setGeometry(QRect(0, 0, 285, 21));
         MainWindow->setMenuBar(menubar);
 
         retranslateUi(MainWindow);

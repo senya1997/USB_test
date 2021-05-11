@@ -12,7 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QWidget::setFixedSize(MAIN_WL, MAIN_H);
+    setWindowTitle("USB FTDI600 - FPGA test");
+    setFixedSize(MAIN_WL, MAIN_H);
 
     ui->progress_com->setValue(0);
 }
@@ -32,12 +33,6 @@ void MainWindow::on_but_sel_hex_clicked()
 {
     QString hex_path = QFileDialog::getOpenFileName(this, "Open file", "", "*.hex");
     ui->tb_hex_path->setText(hex_path);
-}
-
-void MainWindow::on_tb_rbf_path_textChanged(const QString &arg1)
-{
-    QString rbf_path;
-    rbf_path = ui->tb_rbf_path->text();
 }
 
 void MainWindow::on_chbox_def_path_clicked(bool checked)
@@ -79,7 +74,6 @@ void MainWindow::on_but_prog_clicked()
     }
 }
 
-
 void MainWindow::on_but_test_clicked()
 {
     QString hex_path;
@@ -92,4 +86,3 @@ void MainWindow::on_but_test_clicked()
         return;
     }
 }
-
