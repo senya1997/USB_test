@@ -1,128 +1,160 @@
-#include <QFile>
-#include <QThread>
-#include <QObject>
+#include "FPGA_device.h"
 
-#include "FPGA_reg.h"
-
-#define ZD4BU2018_CLOCK_FREQUENCY_MHZ       50										//  Частота тактового генератора в Мгц
-
-using USHORT = unsigned short;
-using UINT = unsigned int;
-
-class FPGA_device
+FPGA_device::FPGA_device()
 {
-    public:
-           FPGA_device()
-           {
-                usb_device = new USB_device();
-           }
+    usb_device = new USB_device();
 
-           ~FPGA_device()
-           {
-               if (usb_device)
-               {
-                   delete usb_device;
-                   usb_device = nullptr;
-               }
-           }
+    connect(usb_device, SIGNAL(UpdLog(QString)), this, SLOT(UpdLogBridge(QString)));
+    connect(usb_device, SIGNAL(UpdProgBar(int)), this, SLOT(UpdProgBarBridge(int)));
 
-           // Начальная инициализация устройства
-           bool Initialize(QString RbfFileName)
-           {
-               if (!usb_device->FT600_Connect())
-                   return false;
+    connect(usb_device, SIGNAL(ShowMsg(QString,QString)), this, SLOT(ShowMsgBridge(QString,QString)));
+}
 
-               if (!usb_device->FPGALoad(RbfFileName, &CurrFPGAVer))
-                   return false;
+FPGA_device::~FPGA_device()
+{
+   if (usb_device)
+   {
+       delete usb_device;
+       usb_device = nullptr;
+   }
+}
 
-               UINT Wr_Data;							//	Массив, загружаемый в контроллер
+// Начальная инициализация устройства
+bool FPGA_device::Initialize(QString RbfFileName)
+{
+    emit UpdLog("FPGA_device::Initialize: Start");
 
-               Wr_Data = 0;
-               if (!usb_device->UsbWrite(Adr_ADCch_PW21, &Wr_Data, 2, false))        //	0 channel AFE is PW2_1 Channel
-               {
-                   return false;
-               }
-               Wr_Data = 1;
-               if (!usb_device->UsbWrite(Adr_ADCch_PW22, &Wr_Data, 2, false))        //	1 channel AFE is PW2_2 Channel
-               {
-                   return false;
-               }
+    if (!usb_device->FT600_Connect())
+       return false;
 
-               // Устанавливаем начальные значения параметров
-               m_PWPulseTime_us    = 2;
+    if (!usb_device->FPGALoad(RbfFileName, &CurrFPGAVer))
+       return false;
 
-               return true;
-           }
+    emit UpdLog("FPGA_device::Initialize: Successful programing FPGA");
+/*
+    UINT Wr_Data;							//	Массив, загружаемый в контроллер
 
-           // Загрузка значения длительности импульса (в микросекундах)
-           bool SetPWPulseTime_us (USHORT PWPulseTime_us)
-           {
-               UINT Wr_Data;							//	Массив, загружаемый в контроллер
+    Wr_Data = 0;
+    if (!usb_device->UsbWrite(Adr_ADCch_PW21, &Wr_Data, 2, false))        //	0 channel AFE is PW2_1 Channel
+    {
+       return false;
+    }
+    Wr_Data = 1;
+    if (!usb_device->UsbWrite(Adr_ADCch_PW22, &Wr_Data, 2, false))        //	1 channel AFE is PW2_2 Channel
+    {
+       return false;
+    }
 
-               while (usb_device->USB_busy);
-               Wr_Data = PWPulseTime_us*2;
-               if (!usb_device->UsbWrite(Adr_PTrN, &Wr_Data, 2, false))          //	Stop
-               {
-                   return false;
-               }
-               m_PWPulseTime_us = PWPulseTime_us;
-               // Пересчитываем и записываем все зависимые параметры
-               SetDepParameters();
-               return true;
-           }
+    // Устанавливаем начальные значения параметров
+    m_PWPulseTime_us    = 2;
+*/
+    return true;
+}
 
-           // Запуск работы
-           bool Start()
-           {
-               UINT Wr_Data;							//	Массив, загружаемый в контроллер
-               Wr_Data = 0;
-               if (!usb_device->UsbWrite(Adr_DBufReset, &Wr_Data, 2, false))			//	Reset FIFO
-               {
-                   return false;
-               }
+// Загрузка значения длительности импульса (в микросекундах)
+bool FPGA_device::StartTest(QString HexFileName)
+{
+    emit UpdLog("FPGA_device::StartTest: Start");
 
-               Wr_Data = 1;
-               if (!usb_device->UsbWrite(Adr_Start_CA, &Wr_Data, 2, false))          //	Start
-               {
-                   return false;
-               }
-               return true;
-           }
+    QFile hex_file(HexFileName);
 
-           // Остановка работы
-           bool Stop()
-           {
-               UINT Wr_Data;							//	Массив, загружаемый в контроллер
+    if (!hex_file.open(QIODevice::ReadOnly))
+    {
+       emit ShowMsg("Wrong Path", "File " + HexFileName + " not opened");
+       emit UpdLog("FPGA_device::StartTest: test data '.hex' file not openned");
+       return false;
+    }
 
-               while (usb_device->USB_busy);
-               Wr_Data = 0;
-               if (!usb_device->UsbWrite(Adr_Start_CA, &Wr_Data, 2, false))          //	Stop
-               {
-                   return false;
-               }
-               return true;
-           }
+    QString line;
+    QTextStream in_str(&hex_file);
+    UINT buf_size = 0;
 
-    private:
-           USB_device *usb_device = nullptr;
+    while(!in_str.atEnd())
+    {
+        in_str.readLine();
+        buf_size++;
+    }
 
-           USHORT CurrFPGAVer;
-           USHORT m_PWPulseTime_us;                            //  Длительность импульса передатчика в микросекундах
+    if(buf_size < MIN_BUF_SIZE)
+    {
+        emit UpdLog("FPGA_device::StartTest: Error: test array size is smaller then " + QString::number(MIN_BUF_SIZE));
+        hex_file.close();
+        return false;
+    }
 
-           bool SetDepParameters()                            // Загрузка зависимых параметров
-           {
-               UINT Wr_Data;							//	Массив, загружаемый в контроллер
+    hex_file.reset();
 
-           // Время между окончанием импульса и началом приёма
-               uint16_t PWMinDepth_us = (uint16_t)(123456);
-               while (usb_device->USB_busy);
+    UINT Wr_Data[buf_size];
 
-               Wr_Data = (PWMinDepth_us+m_PWPulseTime_us) * ZD4BU2018_CLOCK_FREQUENCY_MHZ;
-               if (!usb_device->UsbWrite(Adr_DataStartD, &Wr_Data, 2, false))
-               {
-                   return false;
-               }
+    UCHAR data_width;
 
-               return true;
-           }
-};
+    if(emit GetDataWidth()) data_width = 4; // true - 16 bit, false - 32 bit (default)
+    else data_width = 8;
+
+    for(UINT i = 0; i < buf_size; ++i)
+    {
+        line = in_str.readLine(data_width);
+
+        in_str.readLine();
+        Wr_Data[i] = line.toUInt(0, 16);
+    }
+
+    hex_file.close();
+
+    emit UpdLog("FPGA_device::StartTest: Written array:");
+
+    emit UpdLog("\n\tWritten array:\n");
+
+    line = "";
+    for(UINT i = 0; i < BUF_COL_SHOW; ++i)
+    {
+        for(UINT j = 0; j < BUF_ROW_SHOW; ++j)
+            line.append(QString::number(Wr_Data[j + i*BUF_ROW_SHOW], 16).rightJustified(data_width, '0').toUpper() + "\t");
+
+        emit UpdLog(line);
+        line = "";
+    }
+
+    emit UpdLog("\n...\t...\t...\t...\n");
+
+    UINT buf_bias = buf_size - MIN_BUF_SIZE/2;
+
+    line = "";
+    for(UINT i = 0; i < BUF_COL_SHOW; ++i)
+    {
+        for(UINT j = 0; j < BUF_ROW_SHOW; ++j)
+            line.append(QString::number(Wr_Data[j + i*BUF_ROW_SHOW + buf_bias], 16).rightJustified(data_width, '0').toUpper() + "\t");
+
+        emit UpdLog(line);
+        line = "";
+    }
+/*
+    while(usb_device->getUSB_busy()); // WARNING !!!!! required add timer for avoid freeze
+
+    if (!usb_device->UsbWrite(&Wr_Data[0], buf_size))
+    {
+       emit UpdLog("FPGA_device::StartTest: Failed write data in FPGA");
+       return false;
+    }
+
+    emit UpdLog("FPGA_device::StartTest: Success write data in FPGA");
+*/
+
+
+    return true;
+}
+
+void FPGA_device::UpdLogBridge(QString log_str)
+{
+    emit UpdLog(log_str);
+}
+
+void FPGA_device::UpdProgBarBridge(int prog_value)
+{
+    emit UpdProgBar(prog_value);
+}
+
+void FPGA_device::ShowMsgBridge(QString title, QString msg)
+{
+    emit ShowMsg(title, msg);
+}

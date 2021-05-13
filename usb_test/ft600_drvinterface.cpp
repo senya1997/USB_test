@@ -1,4 +1,4 @@
-#include "header/ft600_drvinterface.h"
+#include "ft600_drvinterface.h"
 /*
  * FT600 Data Loopback Demo App
  *
@@ -6,7 +6,7 @@
  *
  */
 
-#include "header/ft600_drvinterface.h"
+//#include "ft600_drvinterface.h"
 
  ////////////////////////////////////////////////////////////////////////////////////////////////////
  //

@@ -3,12 +3,14 @@
 
 #include <QMainWindow>
 
-const QString RBF_PATH = "D:/SS/asdf.rbf";
-const QString HEX_PATH = "D:/SS/asdf.hex";
+#include <QDialog>
+#include <QFileDialog>
+#include <QMessageBox>
 
-const int MAIN_H = 296;
-const int MAIN_WL = 285;
-const int MAIN_WH = 584;
+#include <QTimer>
+
+#include "defines.h"
+#include "FPGA_device.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -36,7 +38,23 @@ private slots:
 
     void on_but_test_clicked();
 
+    void delay_tick();
+
+    void UpdLog(QString log_str);
+    void UpdProgBar(int prog_value);
+
+    bool GetDataWidth();
+
+    void ShowMsg(QString title, QString msg);
+
 private:
     Ui::MainWindow *ui;
+
+    FPGA_device *fpga;
+
+    bool log_on = false;
+
+    QTimer delay;
 };
+
 #endif // MAINWINDOW_H
