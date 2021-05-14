@@ -30,28 +30,34 @@ bool FPGA_device::Initialize(QString RbfFileName)
     if (!usb_device->FPGALoad(RbfFileName, &CurrFPGAVer))
        return false;
 
-    emit UpdLog("FPGA_device::Initialize: Successful programing FPGA");
-/*
-    UINT Wr_Data;							//	Массив, загружаемый в контроллер
+// read firmware settings:
+    ULONG Data_pnt[2];
+    ULONG RdCnt;                                     //	Текущее колличество слов, считанное из ПЛИС
 
-    Wr_Data = 0;
-    if (!usb_device->UsbWrite(Adr_ADCch_PW21, &Wr_Data, 2, false))        //	0 channel AFE is PW2_1 Channel
+    if(usb_device->UsbReadBuff(8, &RdCnt, (UCHAR*)(Data_pnt))) // mb required delay before read
     {
-       return false;
+        emit UpdVerFPGA(QString::number(Data_pnt[0]));
+        emit UpdDateFPGA(QString::number(Data_pnt[1]));
+
+        emit UpdLog("FPGA_device::Initialize: Successful read FPGA services regs");
+        return true;
     }
-    Wr_Data = 1;
-    if (!usb_device->UsbWrite(Adr_ADCch_PW22, &Wr_Data, 2, false))        //	1 channel AFE is PW2_2 Channel
+    else
     {
-       return false;
+        emit UpdVerFPGA("Error");
+        emit UpdDateFPGA("Error");
+
+        emit UpdLog("     RdCnt: " + QString::number(RdCnt) +
+                    "; Data_pnt: " + QString::number(Data_pnt[0]) +
+                    ", " + QString::number(Data_pnt[0]));
+        emit UpdLog("FPGA_device::Initialize: Failure to read FPGA services regs");
+        return false;
     }
 
-    // Устанавливаем начальные значения параметров
-    m_PWPulseTime_us    = 2;
-*/
+    emit UpdLog("FPGA_device::Initialize: Successful read FPGA services regs");
     return true;
 }
 
-// Загрузка значения длительности импульса (в микросекундах)
 bool FPGA_device::StartTest(QString HexFileName)
 {
     emit UpdLog("FPGA_device::StartTest: Start");

@@ -25,7 +25,7 @@ class USB_device : public QObject
         bool FPGALoad(QString FileName, USHORT *FPGAVer); //  Загрузка прошивки FPGA
 
         bool UsbWrite(UINT* DataBuff, int BNum);
-        void UsbReadBuff(unsigned Readchars, ULONG* p_uLengthTransfered, UCHAR* ReadBuff); // Чтение данных из устройства
+        bool UsbReadBuff(unsigned Readchars, ULONG* p_uLengthTransfered, UCHAR* ReadBuff); // Чтение данных из устройства
 
         bool getUSB_busy() const;
         //void setUSB_busy(bool value);

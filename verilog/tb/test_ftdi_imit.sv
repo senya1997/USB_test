@@ -2,15 +2,11 @@
 
 `define FTDI_DELAY 100_000 // ns (dealy FTDI handling packet)
 
-package fli;
-	import "DPI-C" function mti_Cmd(input string cmd);
-endpackage
-
 module test_ftdi_imit(
 	input iCLK, // 100 or 66 MHz
 
-	inout [15 : 0]	ioDATA, // bufer = 1 kB
-	inout [1 : 0]	ioBE,
+	inout [31 : 0]	ioDATA, // bufer = 1 kB
+	inout [3 : 0]	ioBE,
 	
 	output oTXE_N, // transmit FIFO buffer empty (active low)
 	
@@ -21,26 +17,22 @@ module test_ftdi_imit(
 	input [1 : 0] iGPIO
 );
 
-import fli::*;
-
 initial $timeformat(-6, 3, " us", 6);
 
 logic txe_n = 1'b0;
 logic [9 : 0] data_cnt = 10'd0;
-logic [15 : 0] data;
+logic [31 : 0] data;
 
 always@(iGPIO, iOE_N, iRD_N)begin
 	if(iGPIO == 2'b00) $display("\n\t245 Synchronous FIFO mode: %t\n", $time);
 	else
 		begin
 			$display("\n*** error FIFO mode: %t\n", $time);
-			void'(mti_Cmd("stop -sync"));
 		end
 		
 	if(~iOE_N | ~iRD_N)
 		begin
 			$display("\n*** error OE_N and RD_N must be '1' on write cycle: %t\n", $time);
-			void'(mti_Cmd("stop -sync"));
 		end
 end
 
@@ -48,7 +40,6 @@ always@(posedge iCLK)begin
 	if(iWR_N & (data_cnt != 10'd0))
 		begin
 			$display("\n*** error breakdown of packet (1 packet - 1 kB): %t\n", $time);
-			void'(mti_Cmd("stop -sync"));
 		end
 	else if(~iWR_N)
 		begin
@@ -64,8 +55,7 @@ always@(data_cnt)begin
 			#(`FTDI_DELAY);
 			txe_n = 1'b0;
 
-			$display("\ttransmit 1 packet: %t (press 'run')", $time);
-			void'(mti_Cmd("stop -sync"));			
+			$display("\ttransmit 1 packet: %t (press 'run')", $time);		
 		end
 end
 

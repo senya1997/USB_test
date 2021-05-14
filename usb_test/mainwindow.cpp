@@ -15,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lb_log->hide();
     ui->prog_bar->setValue(0);
 
+    ui->tb_fw_date->setReadOnly(true);
+    ui->tb_fw_ver->setReadOnly(true);
+
     ui->text_log->setCursor(Qt::OpenHandCursor);
 
     fpga = new FPGA_device();
@@ -26,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(fpga, SIGNAL(GetDataWidth()), this, SLOT(GetDataWidth()));
     connect(fpga, SIGNAL(ShowMsg(QString,QString)), this, SLOT(ShowMsg(QString,QString)));
+
+    connect(fpga, SIGNAL(UpdVerFPGA(QString)), this, SLOT(UpdVerFPGA(QString)));
+    connect(fpga, SIGNAL(UpdDateFPGA(QString)), this, SLOT(UpdDateFPGA(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -42,13 +48,13 @@ MainWindow::~MainWindow()
 void MainWindow::on_but_sel_rbf_clicked()
 {
     QString rbf_path = QFileDialog::getOpenFileName(this, "Open file", "", "*.rbf");
-    ui->tb_rbf_path->setText(rbf_path);
+    if(!rbf_path.isNull()) ui->tb_rbf_path->setText(rbf_path);
 }
 
 void MainWindow::on_but_sel_hex_clicked()
 {
     QString hex_path = QFileDialog::getOpenFileName(this, "Open file", "", "*.hex");
-    ui->tb_hex_path->setText(hex_path);
+    if(!hex_path.isNull()) ui->tb_hex_path->setText(hex_path);
 }
 
 void MainWindow::on_chbox_def_path_clicked(bool checked)
@@ -94,13 +100,22 @@ void MainWindow::on_but_prog_clicked()
     QString rbf_path;
     bool init_success;
 
+    ui->lb_log->hide();
     rbf_path = ui->tb_rbf_path->text();
 
     init_success = fpga->Initialize(rbf_path);
 
     ui->lb_log->show();
-    if(init_success)    ui->lb_log->setText("Successful");
-    else                ui->lb_log->setText("Failure");
+    if(init_success)
+    {
+        ui->lb_log->setStyleSheet("color: rgb(0, 255, 0)");
+        ui->lb_log->setText("Successful!");
+    }
+    else
+    {
+        ui->lb_log->setStyleSheet("color: rgb(255, 0, 0)");
+        ui->lb_log->setText("Failure!");
+    }
 
     if(log_on) ui->text_log->append(" ");
     delay.start(3000); // show label on this time
@@ -113,13 +128,22 @@ void MainWindow::on_but_test_clicked()
     QString hex_path;
     bool test_success;
 
+    ui->lb_log->hide();
     hex_path = ui->tb_hex_path->text();
 
     test_success = fpga->StartTest(hex_path);
 
     ui->lb_log->show();
-    if(test_success)    ui->lb_log->setText("Successful");
-    else                ui->lb_log->setText("Failure");
+    if(test_success)
+    {
+        ui->lb_log->setStyleSheet("color: rgb(0, 255, 0)");
+        ui->lb_log->setText("Successful!");
+    }
+    else
+    {
+        ui->lb_log->setStyleSheet("color: rgb(255, 0, 0)");
+        ui->lb_log->setText("Failure!");
+    }
 
     if(log_on) ui->text_log->append(" ");
     delay.start(3000); // show label on this time
@@ -145,10 +169,20 @@ bool MainWindow::GetDataWidth()
 
 void MainWindow::delay_tick()
 {
-    ui->lb_log->hide();
+    //ui->lb_log->hide();
 }
 
 void MainWindow::ShowMsg(QString title, QString msg)
 {
     QMessageBox::information(this, title, msg);
+}
+
+void MainWindow::UpdVerFPGA(QString ver)
+{
+    ui->tb_fw_ver->setText(ver);
+}
+
+void MainWindow::UpdDateFPGA(QString date)
+{
+    ui->tb_fw_date->setText(date);
 }

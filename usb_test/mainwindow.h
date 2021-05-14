@@ -47,6 +47,9 @@ private slots:
 
     void ShowMsg(QString title, QString msg);
 
+    void UpdVerFPGA(QString ver);
+    void UpdDateFPGA(QString date);
+
 private:
     Ui::MainWindow *ui;
 

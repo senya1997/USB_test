@@ -155,7 +155,7 @@
      </font>
     </property>
     <property name="title">
-     <string>FTDI 16/32 bit select:</string>
+     <string>FTDI 16/32 bit width:</string>
     </property>
     <widget class="QRadioButton" name="radBut_16bit">
      <property name="enabled">
@@ -250,6 +250,62 @@
      <string>TextLabel</string>
     </property>
    </widget>
+   <widget class="QLabel" name="FW_ver">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>110</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>FW ver:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="FW_date">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>150</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>FW date:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="tb_fw_ver">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>130</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="tb_fw_date">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>170</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
    <zorder>groupBox</zorder>
    <zorder>but_sel_rbf</zorder>
    <zorder>RBF_path</zorder>
@@ -264,6 +320,10 @@
    <zorder>text_log</zorder>
    <zorder>prog_bar</zorder>
    <zorder>lb_log</zorder>
+   <zorder>FW_ver</zorder>
+   <zorder>FW_date</zorder>
+   <zorder>tb_fw_ver</zorder>
+   <zorder>tb_fw_date</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">

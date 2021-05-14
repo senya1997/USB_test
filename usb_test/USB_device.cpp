@@ -159,12 +159,12 @@ bool USB_device::FPGALoad(QString FileName, USHORT *FPGAVer)       //  Загр�
     uChipZ64Size = (ULONG)SrcFileChipZ64.size(); //GetLength();
 
     char * databuf = nullptr;
-    short* databuf_load = nullptr;
+    long* databuf_load = nullptr;
 
     databuf = new char[uChipZ64Size];
     Q_ASSERT(databuf);
 
-    databuf_load = new short[uChipZ64Size * 16];
+    databuf_load = new long[uChipZ64Size * 16];
     Q_ASSERT(databuf_load);
 
     SrcFileChipZ64.read(databuf, uChipZ64Size);
@@ -173,31 +173,49 @@ bool USB_device::FPGALoad(QString FileName, USHORT *FPGAVer)       //  Загр�
     prog_value++;
     emit UpdProgBar(prog_value*100/PROG_LOAD);
 
+
+
+
+
+
+
+
+    quint32 DATA1_CLOCK0 = 0x40000000; //бит 30
+    quint32 DATA1_CLOCK1 = 0xC0000000; //биты 30, 31
+    quint32 DATA0_CLOCK0 = 0x00000000;
+    quint32 DATA0_CLOCK1 = 0x80000000; //бит 31
+
 //NConfig
     ft600_drv->WriteGPIO(1, 0);
         Sleep(2);
     ft600_drv->WriteGPIO(1, 1);
 
-    unsigned k = 0;
-
-    for (unsigned j = 0; j < uChipZ64Size; j++)
-    {
-        for (unsigned i = 0; i < 8; i++)
+    quint32 k = 0;
+        for(quint32 j = 0; j < uChipZ64Size; ++j)
         {
-            if ((databuf[j] >> i) & 1)
+            for(quint32 i = 0; i < 8; ++i)
             {
-                databuf_load[k++] = 0x400;//data = 1 clock = 0
-                databuf_load[k++] = 0xC00;//data = 1 clock = 1
-            }
-            else
-            {
-                databuf_load[k++] = 0x0;//data = 0 clock = 0
-                databuf_load[k++] = 0x800;//data = 0 clock = 1
-            }
+                if((databuf[j] >> i) & 1)
+                {
+                    databuf_load[k++] = DATA1_CLOCK0;  //data = 1 clock = 0
+                    databuf_load[k++] = DATA1_CLOCK1;  //data = 1 clock = 1
+                }
+                else
+                {
+                    databuf_load[k++] = DATA0_CLOCK0;  //data = 0 clock = 0
+                    databuf_load[k++] = DATA0_CLOCK1;  //data = 0 clock = 1
+                }
         }
     }
 
-    ftStatus = ft600_drv->WritePipe(0x02, (PUCHAR)databuf_load, uChipZ64Size * 32, &ulActualBytesWritten, NULL);
+
+
+
+
+
+
+
+    ftStatus = ft600_drv->WritePipe(0x02, (PUCHAR)databuf_load, uChipZ64Size * 16 * 4, &ulActualBytesWritten, NULL);
     if (ftStatus != FT_OK)
     {
         emit UpdLog("USB_device::FPGALoad: Function WritePipe failed (check Power)");
@@ -209,38 +227,6 @@ bool USB_device::FPGALoad(QString FileName, USHORT *FPGAVer)       //  Загр�
 
     delete[] databuf;
     delete[] databuf_load;
-
-//Делаем запись/чтение в регистр Adr_Test для первичной проверки работоспосбная ли прошивка загрузилась
-    /*UINT Test_Data = 0xC006;                        //	Значение тестового регистра
-    UINT Wr_Data;                                   //	Массив, загружаемый в тестовый регистр
-
-    USHORT Data_pnt[4];
-    UINT RdCnt;                                     //	Текущее колличество слов, считанное из ПЛИС
-
-    Wr_Data = 0;
-    UsbWrite(Adr_AbortPipe, &Wr_Data, 2, false);    //	AbortPipe
-    Wr_Data = Test_Data;
-    UsbWrite(Adr_Test, &Wr_Data, 2, false);			//	Запись значения в тестовый регистр
-    Wr_Data = 1;
-    UsbWrite(Adr_GetInfo, &Wr_Data, 2, false);		//	Запись GetInfo
-
-    UsbReadBuff(8, (ULONG*)&RdCnt,(UCHAR*)(Data_pnt));  //  Читаем данные из FPGA
-
-    if (Data_pnt[1] != Test_Data)
-    {
-        if (IsLoggerInitted)
-        {
-            QString dbgStr = "ZD4BU_2018::FPGALoad Error *.rbf file! Write to Adr_Test: " + QString::number(Test_Data) + "Read from Adr_Test: " + QString::number(Data_pnt[2]) + " !!!";
-            m_DbgLog->MsgOutput(QtMsgType::QtFatalMsg,dbgStr);
-        }
-        return false;
-    }
-    if (IsLoggerInitted)
-    {
-        QString dbgStr = "ZD4BU_2018::FPGALoad FPGALoad Succesfully... FPGAVer = " + QString::number(Data_pnt[0]);
-        m_DbgLog->MsgOutput(QtMsgType::QtInfoMsg,dbgStr);
-    }
-    *FPGAVer = Data_pnt[0];*/
 
     emit UpdLog("USB_device::FPGALoad: Successful load '.rbf' in FPGA");
 
@@ -317,7 +303,7 @@ bool USB_device::UsbWrite(BYTE addr, UINT* DataBuff, int BNum, bool WrType)
 */
 
 //Чтение порции данных по USB
-void USB_device::UsbReadBuff(unsigned	Readchars,				//Сколько считать
+bool USB_device::UsbReadBuff(unsigned	Readchars,				//Сколько считать
                              ULONG*		p_uLengthTransfered,	//Сколько считать получилось
                              UCHAR*     ReadBuff)               //Куда считывать
 {
@@ -335,16 +321,18 @@ void USB_device::UsbReadBuff(unsigned	Readchars,				//Сколько счита�
 
     ftStatus = ft600_drv->ReadPipe(0x82, ReadBuff, Readchars, p_uLengthTransfered, NULL);
 
+    USB_busy = false;
+
     if (ftStatus == FT_OK)
     {
         emit UpdLog("USB_device::UsbReadBuff: Success read data");
+        return true;
     }
     else
     {
         emit UpdLog("USB_device::UsbReadBuff: Failure read data");
+        return false;
     }
-
-    USB_busy = false;
 }
 
 bool USB_device::getUSB_busy() const

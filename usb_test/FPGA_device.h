@@ -33,6 +33,9 @@ class FPGA_device : public QObject
 
            void ShowMsg(QString title, QString msg);
 
+           void UpdVerFPGA(QString ver);
+           void UpdDateFPGA(QString date);
+
     private slots:
            void UpdLogBridge(QString log_str);
            void UpdProgBarBridge(int prog_value);
