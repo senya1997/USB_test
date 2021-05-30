@@ -24,8 +24,8 @@
 	`define FTDI_DELAY 5_000 // ns dealy FTDI handling packet
 
 // auto updated defines:
+// do not touch!
 
 	// xx.xxx two first - version, other - build number, allow to change only two first number (version):
 		`define FW_VER 1004
-
 		`define FW_DATE 05_20_21

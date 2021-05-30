@@ -57,11 +57,13 @@ if {$flag_def_exist == 0} {
 	return -code error "\n'$name_def_ver' define was not found in $path_def"
 }
 
+puts $f_def "`define $name_def_date $date"
+
 close $f_def
 
 # copy scripts and check paths:
 foreach path_script [list $path_sim_start $path_wave] {
-	catch {file copy -force $path_script	$path_modelsim} res
+	catch {file copy -force $path_script $path_modelsim} res
 
 	if {$res == 0} {
 		post_message -type warning "Failure to copy script '$path_script' in path '$path_modelsim', $res"
