@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QObject>
 
+#include <QTimer>
+
 #include "defines.h"
 
 #include "USB_device.h"
@@ -30,8 +32,15 @@ class FPGA_device : public QObject
            void UpdProgBar(int prog_value);
 
            bool GetDataWidth();
+           bool GetCycloneLEs();
+           void SetCycloneLEs(bool cyclone_LEs);
+
+           bool GetChBoxDefPath();
 
            void ShowMsg(QString title, QString msg);
+
+           void UpdRbfPath(QString rbf_path);
+           void UpdFTDIDesc(QString desc);
 
            void UpdVerFPGA(QString ver);
            void UpdDateFPGA(QString date);
@@ -39,6 +48,11 @@ class FPGA_device : public QObject
     private slots:
            void UpdLogBridge(QString log_str);
            void UpdProgBarBridge(int prog_value);
+
+           void UpdFTDIDescBridge(QString desc);
+
+           bool GetCycloneLEsBridge();
+           void SetCycloneLEsBridge(bool cyclone_LEs);
 
            void ShowMsgBridge(QString title, QString msg);
 

@@ -16,18 +16,35 @@ USB_device::~USB_device()
 
 bool USB_device::FT600_Connect(void) //Соединение с FT600, инициализация FT600
 {
+    FT_DEVICE_LIST_INFO_NODE *ptrInfo;
+    FT_60XCONFIGURATION oConfigurationData;
+
+    int desc_size;
+
+    bool isCorrected;
+
+    emit UpdLog("USB_device::FT600_Connect: Start");
+
 OPEN:
     prog_value = 0;
     emit UpdProgBar(0);
 
     ft600_drv->Cleanup();
 
-    emit UpdLog("USB_device::FT600_Connect: Start");
-
 // Проверка наличия нашего USB устройство,
-    bool bResult = ft600_drv->Initialize(EOPEN_BY_DESC, (PVOID)ZDOPP_DEVICE_NAME, (PVOID)g_chSerialNumber);
 
-    if (!bResult)
+    ft600_drv->GetDevicesInfoList(&ptrInfo);
+
+    desc_size = 0;
+    while(ptrInfo->Description[desc_size] != 0x00) ++desc_size;
+    ++desc_size;
+
+    char desc[desc_size];
+
+    for(int i = 0; i < desc_size; ++i)
+        desc[i] = ptrInfo->Description[i];
+
+    if(!ft600_drv->Initialize(EOPEN_BY_DESC, (PVOID)desc, (PVOID)g_chSerialNumber))
     {
         emit UpdLog("USB_device::FT600_Connect: Connect error initialization");
         return false;
@@ -36,11 +53,9 @@ OPEN:
     prog_value++;
     emit UpdProgBar(prog_value*100/PROG_CONNECT);
 
-//Проверяем и при необходимости корректируем конфигурацию FTDI
-    FT_60XCONFIGURATION oConfigurationData;
-    bool isCorrected = false;
-
 //Читаем конфигурацию
+    isCorrected = false;
+
     if (!ft600_drv->ReadChipConfiguration(&oConfigurationData))
     {
         emit UpdLog("USB_device::FT600_Connect: Can not read FTDI configuration");
@@ -51,14 +66,50 @@ OPEN:
     emit UpdProgBar(prog_value*100/PROG_CONNECT);
 
 //Проверяем конфигурацию
+    if(QString::compare(desc, DEVICE_NAME120) == 0)
+    {
+        emit SetCycloneLEs(true);
+        cyclone_LEs = true;
+    }
+    else if(QString::compare(desc, DEVICE_NAME080) == 0)
+    {
+        emit SetCycloneLEs(false);
+        cyclone_LEs = false;
+    }
+    else
+    {
+        isCorrected = true;
+
+        if(emit GetCycloneLEs())
+        {
+            cyclone_LEs = true;
+            for(int i = 0; i < desc_size; ++i)
+                desc[i] = DEVICE_NAME120[i];
+
+            ft600_drv->SetStringDescriptors(oConfigurationData.StringDescriptors, sizeof(oConfigurationData.StringDescriptors),
+                                            VENDOR_NAME, DEVICE_NAME120, g_chSerialNumber);
+        }
+        else
+        {
+            cyclone_LEs = false;
+            for(int i = 0; i < desc_size; ++i)
+                desc[i] = DEVICE_NAME080[i];
+
+            ft600_drv->SetStringDescriptors(oConfigurationData.StringDescriptors, sizeof(oConfigurationData.StringDescriptors),
+                                            VENDOR_NAME, DEVICE_NAME080, g_chSerialNumber);
+        }
+    }
+
+    emit UpdFTDIDesc((QString)desc);
+
     if (oConfigurationData.OptionalFeatureSupport != (CONFIGURATION_OPTIONAL_FEATURE_DISABLECANCELSESSIONUNDERRUN | CONFIGURATION_OPTIONAL_FEATURE_DISABLEUNDERRUN_INCHALL))
     {//Session underrun
         oConfigurationData.OptionalFeatureSupport = CONFIGURATION_OPTIONAL_FEATURE_DISABLECANCELSESSIONUNDERRUN | CONFIGURATION_OPTIONAL_FEATURE_DISABLEUNDERRUN_INCHALL;
         isCorrected = true;
     }
-    if (oConfigurationData.FIFOClock != CONFIGURATION_FIFO_CLK_100) //CONFIGURATION_FIFO_CLK_66)
+    if (oConfigurationData.FIFOClock != CONFIGURATION_FIFO_CLK_66)
     {//FIFO clock
-        oConfigurationData.FIFOClock = CONFIGURATION_FIFO_CLK_100;  //CONFIGURATION_FIFO_CLK_66;
+        oConfigurationData.FIFOClock = CONFIGURATION_FIFO_CLK_66;
         isCorrected = true;
     }
     if (oConfigurationData.FIFOMode != CONFIGURATION_FIFO_MODE_245)
@@ -75,21 +126,14 @@ OPEN:
 //Пишем, если корректировалась
     if (isCorrected)
     {
-        //vendor/device name
-        ft600_drv->SetStringDescriptors(oConfigurationData.StringDescriptors, sizeof(oConfigurationData.StringDescriptors),
-            VENDOR_NAME,
-            ZDOPP_DEVICE_NAME,
-            g_chSerialNumber //"v1"
-        );
-
         if (!ft600_drv->WriteChipConfiguration(&oConfigurationData))
         {
             emit UpdLog("USB_device::FT600_Connect: Failure configuration FTDI");
             return false;
         }
 
-        QThread::msleep(4000);  //1000 похоже не хватает
-        isCorrected = false; // ???
+        QThread::msleep(4000); //1000 похоже не хватает
+        //isCorrected = false; // ???
 
         goto OPEN; // reconfig
     }
@@ -133,7 +177,7 @@ int USB_device::SetFPGAPower(eFPGAPOWER ePwr)                   //  Управл
     return 0;
 }
 
-bool USB_device::FPGALoad(QString FileName, USHORT *FPGAVer)       //  Загрузка прошивки FPGA
+bool USB_device::FPGALoad(QString FileName)       //  Загрузка прошивки FPGA
 {
     prog_value = 0;
     emit UpdProgBar(0);
@@ -234,7 +278,7 @@ bool USB_device::FPGALoad(QString FileName, USHORT *FPGAVer)       //  Загр�
 }
 
 // Запись в устройство данных по адресу.
-bool USB_device::UsbWrite(UINT* DataBuff, int BNum)
+bool USB_device::UsbWrite(UCHAR* DataBuff, int BNum)
 {
     FT_STATUS ftStatus = FT_OK;             //	Статус операции записи
 
@@ -340,9 +384,7 @@ bool USB_device::getUSB_busy() const
     return USB_busy;
 }
 
-/*
-void USB_device::setUSB_busy(bool value)
+bool USB_device::getCyclone_LEs() const
 {
-    USB_busy = value;
+    return cyclone_LEs;
 }
-*/

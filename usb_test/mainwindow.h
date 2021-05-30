@@ -38,14 +38,19 @@ private slots:
 
     void on_but_test_clicked();
 
-    void delay_tick();
-
     void UpdLog(QString log_str);
     void UpdProgBar(int prog_value);
 
     bool GetDataWidth();
+    bool GetCycloneLEs();
+    void SetCycloneLEs(bool cyclone_LEs);
+
+    bool GetChBoxDefPath();
 
     void ShowMsg(QString title, QString msg);
+
+    void UpdRbfPath(QString rbf_path);
+    void UpdFTDIDesc(QString desc);
 
     void UpdVerFPGA(QString ver);
     void UpdDateFPGA(QString date);
@@ -56,8 +61,6 @@ private:
     FPGA_device *fpga;
 
     bool log_on = false;
-
-    QTimer delay;
 };
 
 #endif // MAINWINDOW_H

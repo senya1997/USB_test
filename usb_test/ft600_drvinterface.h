@@ -41,12 +41,14 @@ class FT600_DrvInterface
         FT_STATUS WritePipe(UCHAR a_ucPipeID,PUCHAR a_pucBuffer,ULONG a_ulBufferLength,PULONG a_pulLengthTransferred,LPOVERLAPPED a_pOverlapped);
         FT_STATUS ReadPipe(UCHAR a_ucPipeID,PUCHAR a_pucBuffer,ULONG a_ulBufferLength,PULONG a_pulLengthTransferred,LPOVERLAPPED a_pOverlapped);
 
+        DWORD GetDevicesInfoList(FT_DEVICE_LIST_INFO_NODE **pptDevicesInfo);
+
         QString StatusStr;
 
    private:
 
         DWORD GetNumberOfDevicesConnected();
-        DWORD GetDevicesInfoList(FT_DEVICE_LIST_INFO_NODE **pptDevicesInfo);
+        //DWORD GetDevicesInfoList(FT_DEVICE_LIST_INFO_NODE **pptDevicesInfo);
         VOID ReleaseDevicesInfoList(FT_DEVICE_LIST_INFO_NODE *ptDevicesInfo);
 
         FT_HANDLE   m_FTHandle = nullptr;  //Handle driver

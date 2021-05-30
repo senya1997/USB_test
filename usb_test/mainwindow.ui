@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>697</width>
-    <height>306</height>
+    <height>343</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,7 +59,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>200</y>
+      <y>240</y>
       <width>91</width>
       <height>23</height>
      </rect>
@@ -72,7 +72,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>240</y>
+      <y>280</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -139,12 +139,15 @@
     <property name="text">
      <string>Use default path</string>
     </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="FTDI_16_32">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>140</y>
+      <y>130</y>
       <width>161</width>
       <height>51</height>
      </rect>
@@ -155,7 +158,7 @@
      </font>
     </property>
     <property name="title">
-     <string>FTDI 16/32 bit width:</string>
+     <string>FTDI data width:</string>
     </property>
     <widget class="QRadioButton" name="radBut_16bit">
      <property name="enabled">
@@ -197,7 +200,7 @@
     <property name="geometry">
      <rect>
       <x>230</x>
-      <y>200</y>
+      <y>240</y>
       <width>81</width>
       <height>21</height>
      </rect>
@@ -215,7 +218,7 @@
       <x>320</x>
       <y>10</y>
       <width>361</width>
-      <height>251</height>
+      <height>291</height>
      </rect>
     </property>
    </widget>
@@ -223,7 +226,7 @@
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>240</y>
+      <y>280</y>
       <width>191</width>
       <height>20</height>
      </rect>
@@ -236,7 +239,7 @@
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>200</y>
+      <y>240</y>
       <width>71</width>
       <height>21</height>
      </rect>
@@ -253,9 +256,9 @@
    <widget class="QLabel" name="FW_ver">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>110</y>
-      <width>71</width>
+      <x>180</x>
+      <y>150</y>
+      <width>101</width>
       <height>16</height>
      </rect>
     </property>
@@ -265,15 +268,15 @@
      </font>
     </property>
     <property name="text">
-     <string>FW ver:</string>
+     <string>Firmware ver:</string>
     </property>
    </widget>
    <widget class="QLabel" name="FW_date">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>150</y>
-      <width>71</width>
+      <x>180</x>
+      <y>190</y>
+      <width>111</width>
       <height>16</height>
      </rect>
     </property>
@@ -283,14 +286,14 @@
      </font>
     </property>
     <property name="text">
-     <string>FW date:</string>
+     <string>Firmware date:</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="tb_fw_ver">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>130</y>
+      <x>180</x>
+      <y>170</y>
       <width>111</width>
       <height>20</height>
      </rect>
@@ -299,14 +302,95 @@
    <widget class="QLineEdit" name="tb_fw_date">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>170</y>
+      <x>180</x>
+      <y>210</y>
       <width>111</width>
       <height>20</height>
      </rect>
     </property>
    </widget>
-   <zorder>groupBox</zorder>
+   <widget class="QLineEdit" name="tb_ftdi_desc">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>130</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Cyclone_LEs">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>110</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>FTDI description:</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="Cyclone10LEs">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>180</y>
+      <width>161</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Cyclone 10 LEs:</string>
+    </property>
+    <widget class="QRadioButton" name="radBut_LEs080k">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>51</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>80k</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radBut_LEs120k">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>20</y>
+       <width>51</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>120k</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </widget>
+   <zorder>FTDI_16_32</zorder>
    <zorder>but_sel_rbf</zorder>
    <zorder>RBF_path</zorder>
    <zorder>tb_rbf_path</zorder>
@@ -324,6 +408,9 @@
    <zorder>FW_date</zorder>
    <zorder>tb_fw_ver</zorder>
    <zorder>tb_fw_date</zorder>
+   <zorder>tb_ftdi_desc</zorder>
+   <zorder>Cyclone_LEs</zorder>
+   <zorder>Cyclone10LEs</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">

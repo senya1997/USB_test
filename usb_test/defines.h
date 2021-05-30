@@ -9,21 +9,21 @@ using UINT      = unsigned int;
 using ULONG     = unsigned long;
 
 // main frame size:
-    const int MAIN_H = 285;
-    const int MAIN_WL = 319;
-    const int MAIN_WH = 690;
+    const int MAIN_H = 325;
+    const int MAIN_WL = 318;
+    const int MAIN_WH = 691;
 
 // default paths:
-    const QString RBF_PATH = "../verilog/output_files/usb_test.rbf";
+    const QString RBF080_PATH = "../verilog/output_files/usb_test080.rbf";
+    const QString RBF120_PATH = "../verilog/output_files/usb_test120.rbf";
+
     const QString HEX_PATH = "../verilog/test_data.hex";
 
 //Устройство, которое мы ищем (должно быть зашито в FTDI 600)
-    static const char ZDOPP_DEVICE_NAME[]			= "v1 10CL120";
-    static const char* g_chSerialNumber             = "000000000001";
+    static const char DEVICE_NAME120[]			= "v1 Z64_120";
+    static const char DEVICE_NAME080[]			= "v1 Z64_80";
 
-    //static const char ZDOPP_DEVICE_NAME[]			= "ZDopp USB3.0 v1";
-    //static const char* g_chSerialNumber             = "000000000001";
-
+    static const char *g_chSerialNumber             = "000000000001";
     static const char VENDOR_NAME[]					= "JS Zaslon";
 
 // number of step progress bar in appropriate method:
