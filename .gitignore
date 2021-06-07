@@ -63,6 +63,9 @@
 *.app
 
 build-usb_test*-Debug
+build-usb_test*-Release
+deploy
+deploy*
 
 *.ver
 *.zip

@@ -1,17 +1,19 @@
 `include "defines.v"
 
-module test_top (
+module test_top #(parameter D_BIT = 32, BE_BIT = 4)(
 	input iCLK,
 	
 // for debug:
 	output reg [2 : 0] oLED,
-	output reg [4 : 0] oTP,
+	
+	input [1 : 0] iTP,
+	output reg [2 : 0] oTP,
 	
 // FTDI600/601 interface (all signals active low):
 	input iUSB_CLK,
 	
-	inout [31 : 0] ioDATA,
-	inout [3 : 0] ioBE, // byte enable
+	inout [D_BIT - 1 : 0] ioDATA,
+	inout [BE_BIT - 1 : 0] ioBE, // byte enable
 
 	input iTXE_N, // transmit FIFO buffer empty
 	input iRXF_N,
@@ -33,7 +35,7 @@ module test_top (
 	reg [24 : 0] cnt_led;
 
 // FTDI interface:
-	reg [3 : 0] byte_en; // mb Z-state on last word permissible like '4'b0000': tri-state port go to Z-state and this reg not needed
+	reg [BE_BIT - 1 : 0] byte_en; // mb Z-state on last word permissible like '4'b0000': tri-state port go to Z-state and this reg not needed
 
 	reg [2 : 0] shift_txe_n;
 	reg [2 : 0] shift_rxf_n;
@@ -43,7 +45,7 @@ module test_top (
 	reg wr_n;
 
 // out FIFO:
-	reg [31 : 0]	buf_out_data;
+	reg [D_BIT - 1 : 0]	buf_out_data;
 	
 	reg [9 : 0]		buf_out_num_data;
 	reg [9 : 0]		buf_out_cnt_data; // defined by buf size words (max 1024 bytes in 1 USB packet from FTDI datasheet)
@@ -89,17 +91,19 @@ localparam	S_IDLE = 3'd0,
 /***************************************************************************************************/
 					
 // out FIFO:
-	wire [31 : 0] DATA_OUT;
+	wire [D_BIT - 1 : 0] DATA_OUT;
 	
 	wire BUF_OUT_EMPTY, BUF_OUT_FULL;
 
 	wire BUF_OUT_LOADED = (buf_out_cnt_data == buf_out_num_data);
 	
 // in FIFO:
-	wire [31 : 0] DATA_IN;
+	wire [D_BIT - 1 : 0] DATA_IN;
 	
 	wire BUF_IN_EMPTY, BUF_IN_FULL;
 
+	wire [D_BIT - 1 : 0] DATA_IN_TEST = iTP[0] ? DATA_IN : {DATA_IN[D_BIT - 1 : 1], ~DATA_IN[0]}; // test
+	
 // others:
 	wire CLK_100; // using in tb
 	wire RESET_USB = reset_usb[1];
@@ -125,7 +129,7 @@ initial begin
 	cnt_led = 25'd0;
 	
 	oLED = 3'b111;
-	oTP = 5'b00000;
+	oTP = 3'b000;
 end
 
 always@(posedge iCLK)begin
@@ -137,6 +141,8 @@ always@(posedge iCLK)begin
 end
 
 always@(posedge iCLK)begin
+	oTP[0] = 1'b1;
+
 	if(cnt_reset == 10'd128) reset <= 1'b0;
 	else 
 		begin
@@ -169,13 +175,13 @@ end
 	
 // data, num of data, cnt data:
 	always@(posedge CLK_100 or posedge reset)begin
-		if(reset) buf_out_data <= 32'd0;
+		if(reset) buf_out_data <= {D_BIT{1'b0}};
 		else if(~flag_upd_fw_n)
 			begin
 				if(buf_out_cnt_data == 10'd0) buf_out_data <= `FW_VER;
 				else if(buf_out_cnt_data == 10'd1) buf_out_data <= `FW_DATE;
 			end
-		else if(flag_buf_in_loaded_clk100[1]) buf_out_data <= DATA_IN;
+		else if(flag_buf_in_loaded_clk100[1]) buf_out_data <= DATA_IN_TEST;
 	end
 
 	always@(posedge CLK_100 or posedge reset)begin
@@ -251,7 +257,7 @@ end
 always@(negedge iUSB_CLK or posedge RESET_USB)begin    
 	if(RESET_USB) 
 		begin
-			byte_en  <= 4'b0000;
+			byte_en <= {BE_BIT{1'b0}};
 			
 			oe_n <= 1'b1;
 			rd_n <= 1'b1;
@@ -272,12 +278,12 @@ always@(negedge iUSB_CLK or posedge RESET_USB)begin
 			S_WR_DATA:
 				begin
 					wr_n <= 1'b0;
-					byte_en  <= 4'b1111; // required check in tb conformity between valid DATA and BYTE EN
+					byte_en  <= {BE_BIT{1'b1}}; // required check in tb conformity between valid DATA and BYTE EN
 					
 					if(shift_txe_n[0] | BUF_OUT_EMPTY)
 						begin
 							state <= S_WR_END;
-							byte_en  <= 4'b0000; // all bytes in word (data) not valid
+							byte_en  <= {BE_BIT{1'b0}}; // all bytes in word (data) not valid
 						end
 				end                                  
 			S_WR_END: 
@@ -361,7 +367,7 @@ end
 	
 // instances:
 
-	test_fifo FIFO_BUF_IN(
+	test_fifo #(.D_BIT(D_BIT)) FIFO_BUF_IN(
 		.aclr(reset),
 		
 	// posedge CLK 100 MHz
@@ -377,7 +383,7 @@ end
 		.wrfull(BUF_IN_FULL)
 	);
 
-	test_fifo FIFO_BUF_OUT(
+	test_fifo #(.D_BIT(D_BIT)) FIFO_BUF_OUT(
 		.aclr(reset),
 		
 	// negedge USB CLK
@@ -403,8 +409,8 @@ end
 
 // outputs:
 
-	assign ioDATA	= wr_n ? 32'hZZZZ : DATA_OUT;
-	assign ioBE		= wr_n ? 4'hZ : byte_en;
+	assign ioDATA	= wr_n ? {D_BIT{1'bZ}} : DATA_OUT;
+	assign ioBE		= wr_n ? {BE_BIT{1'bZ}} : byte_en;
 
 	assign oOE_N = oe_n;
 	assign oRD_N = rd_n;

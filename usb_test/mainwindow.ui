@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>697</width>
-    <height>343</height>
+    <height>362</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,7 +59,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>240</y>
+      <y>270</y>
       <width>91</width>
       <height>23</height>
      </rect>
@@ -72,7 +72,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>280</y>
+      <y>300</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -218,7 +218,7 @@
       <x>320</x>
       <y>10</y>
       <width>361</width>
-      <height>291</height>
+      <height>311</height>
      </rect>
     </property>
    </widget>
@@ -226,7 +226,7 @@
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>280</y>
+      <y>300</y>
       <width>191</width>
       <height>20</height>
      </rect>
@@ -238,10 +238,10 @@
    <widget class="QLabel" name="lb_log">
     <property name="geometry">
      <rect>
-      <x>140</x>
-      <y>240</y>
-      <width>71</width>
-      <height>21</height>
+      <x>110</x>
+      <y>250</y>
+      <width>141</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
@@ -390,6 +390,19 @@
      </property>
     </widget>
    </widget>
+   <widget class="QPushButton" name="but_prog_ftdi">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>240</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Force prog FTDI</string>
+    </property>
+   </widget>
    <zorder>FTDI_16_32</zorder>
    <zorder>but_sel_rbf</zorder>
    <zorder>RBF_path</zorder>
@@ -411,6 +424,7 @@
    <zorder>tb_ftdi_desc</zorder>
    <zorder>Cyclone_LEs</zorder>
    <zorder>Cyclone10LEs</zorder>
+   <zorder>but_prog_ftdi</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">

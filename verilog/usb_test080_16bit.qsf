@@ -18,14 +18,14 @@
 #
 # Quartus Prime
 # Version 18.1.0 Build 625 09/12/2018 SJ Lite Edition
-# Date created = 12:43:43  May 28, 2021
+# Date created = 16:01:09  June 02, 2021
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		usb_test_assignment_defaults.qdf
+#		usb_test080_16bit_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -41,15 +41,60 @@
 # ========================
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:pre_usb_test.tcl"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.1.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:00:07  MAY 13, 2021"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:27:37  JUNE 02, 2021"
 set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name VERILOG_FILE test_16bit.v
+set_global_assignment -name TCL_SCRIPT_FILE usb_test.tcl
+set_global_assignment -name TCL_SCRIPT_FILE pre_usb_test.tcl
+set_global_assignment -name SDC_FILE usb_test.out.sdc
+set_global_assignment -name VERILOG_FILE test_pll.v
+set_global_assignment -name VERILOG_FILE test_fifo.v
+set_global_assignment -name VERILOG_FILE test_top.v
+set_global_assignment -name VERILOG_FILE defines.v
+
+# Pin & Location Assignments
+# ==========================
+set_location_assignment PIN_A14 -to iUSB_CLK
+set_location_assignment PIN_D13 -to oOE_N
+set_location_assignment PIN_D12 -to oRD_N
+set_location_assignment PIN_D11 -to iRXF_N
+set_location_assignment PIN_C11 -to iTXE_N
+set_location_assignment PIN_C12 -to oWR_N
+set_location_assignment PIN_C10 -to ioBE[0]
+set_location_assignment PIN_D10 -to ioBE[1]
+set_location_assignment PIN_B3 -to ioDATA[0]
+set_location_assignment PIN_A3 -to ioDATA[1]
+set_location_assignment PIN_B4 -to ioDATA[2]
+set_location_assignment PIN_A4 -to ioDATA[3]
+set_location_assignment PIN_B6 -to ioDATA[4]
+set_location_assignment PIN_A6 -to ioDATA[5]
+set_location_assignment PIN_B7 -to ioDATA[6]
+set_location_assignment PIN_A7 -to ioDATA[7]
+set_location_assignment PIN_B8 -to ioDATA[8]
+set_location_assignment PIN_A8 -to ioDATA[9]
+set_location_assignment PIN_B10 -to ioDATA[10]
+set_location_assignment PIN_A10 -to ioDATA[11]
+set_location_assignment PIN_B11 -to ioDATA[12]
+set_location_assignment PIN_A11 -to ioDATA[13]
+set_location_assignment PIN_B12 -to ioDATA[14]
+set_location_assignment PIN_A12 -to ioDATA[15]
+set_location_assignment PIN_D2 -to oLED[0]
+set_location_assignment PIN_D1 -to oLED[1]
+set_location_assignment PIN_E1 -to oLED[2]
+set_location_assignment PIN_R2 -to iTP[0]
+set_location_assignment PIN_R1 -to iTP[1]
+set_location_assignment PIN_U2 -to oTP[0]
+set_location_assignment PIN_U1 -to oTP[1]
+set_location_assignment PIN_V2 -to oTP[2]
+set_location_assignment PIN_Y27 -to iCLK
+set_location_assignment PIN_Y28 -to "iCLK(n)"
 
 # Classic Timing Assignments
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP "-40"
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 125
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 
 # Analysis & Synthesis Assignments
@@ -59,7 +104,7 @@ set_global_assignment -name TOP_LEVEL_ENTITY test_top
 
 # Fitter Assignments
 # ==================
-set_global_assignment -name DEVICE 10CL006YE144A7G
+set_global_assignment -name DEVICE 10CL080YF780I7G
 set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
 set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
 set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
@@ -91,32 +136,31 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# ----------------------
-# start ENTITY(test_top)
+# ------------------------
+# start ENTITY(test_16bit)
 
 	# Fitter Assignments
 	# ==================
-set_instance_assignment -name IO_STANDARD LVDS -to iCLK
+	set_instance_assignment -name IO_STANDARD LVDS -to iCLK
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
+# end ENTITY(test_16bit)
+# ----------------------
+
+# ----------------------
+# start ENTITY(test_top)
+
 # end ENTITY(test_top)
 # --------------------
-set_global_assignment -name TCL_SCRIPT_FILE usb_test.tcl
-set_global_assignment -name TCL_SCRIPT_FILE pre_usb_test.tcl
-set_global_assignment -name SDC_FILE usb_test.out.sdc
-set_global_assignment -name VERILOG_FILE test_pll.v
-set_global_assignment -name VERILOG_FILE test_fifo.v
-set_global_assignment -name VERILOG_FILE test_top.v
-set_global_assignment -name VERILOG_FILE defines.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

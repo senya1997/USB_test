@@ -27,5 +27,5 @@
 // do not touch!
 
 	// xx.xxx two first - version, other - build number, allow to change only two first number (version):
-		`define FW_VER 1004
-		`define FW_DATE 05_20_21
+		`define FW_VER 1033
+		`define FW_DATE 06_02_21

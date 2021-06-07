@@ -58,7 +58,7 @@ test_ftdi_imit FTDI_IMIT(
 	.iGPIO(2'b00)
 );
 
-test_top DUT(
+test_top #(.D_BIT(32), .BE_BIT(4)) DUT(
 	.iCLK(clk),
 	
 	.oLED(),

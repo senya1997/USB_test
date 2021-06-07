@@ -7,8 +7,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-#include <QTimer>
-
 #include "defines.h"
 #include "FPGA_device.h"
 
@@ -27,33 +25,25 @@ public:
 private slots:
 
     void on_chbox_def_path_clicked(bool checked);
-
     void on_chbox_show_log_clicked(bool checked);
-
     void on_but_sel_rbf_clicked();
-
     void on_but_sel_hex_clicked();
-
     void on_but_prog_clicked();
-
     void on_but_test_clicked();
 
     void UpdLog(QString log_str);
     void UpdProgBar(int prog_value);
 
-    bool GetDataWidth();
-    bool GetCycloneLEs();
+    void SetDataWidth(bool data_width);
     void SetCycloneLEs(bool cyclone_LEs);
-
-    bool GetChBoxDefPath();
-
-    void ShowMsg(QString title, QString msg);
 
     void UpdRbfPath(QString rbf_path);
     void UpdFTDIDesc(QString desc);
 
     void UpdVerFPGA(QString ver);
     void UpdDateFPGA(QString date);
+
+    void on_but_prog_ftdi_clicked();
 
 private:
     Ui::MainWindow *ui;

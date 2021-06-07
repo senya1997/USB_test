@@ -36,7 +36,7 @@
 // synopsys translate_off
 `timescale 1 ps / 1 ps
 // synopsys translate_on
-module test_fifo (
+module test_fifo #(parameter D_BIT = 32)(
 	aclr,
 	data,
 	rdclk,
@@ -48,12 +48,12 @@ module test_fifo (
 	wrfull);
 
 	input	  aclr;
-	input	[31:0]  data;
+	input	[D_BIT-1:0]  data;
 	input	  rdclk;
 	input	  rdreq;
 	input	  wrclk;
 	input	  wrreq;
-	output	[31:0]  q;
+	output	[D_BIT-1:0]  q;
 	output	  rdempty;
 	output	  wrfull;
 `ifndef ALTERA_RESERVED_QIS
@@ -64,10 +64,10 @@ module test_fifo (
 // synopsys translate_on
 `endif
 
-	wire [31:0] sub_wire0;
+	wire [D_BIT-1:0] sub_wire0;
 	wire  sub_wire1;
 	wire  sub_wire2;
-	wire [31:0] q = sub_wire0[31:0];
+	wire [D_BIT-1:0] q = sub_wire0[D_BIT-1:0];
 	wire  rdempty = sub_wire1;
 	wire  wrfull = sub_wire2;
 
@@ -91,7 +91,7 @@ module test_fifo (
 		dcfifo_component.lpm_numwords = 256,
 		dcfifo_component.lpm_showahead = "OFF",
 		dcfifo_component.lpm_type = "dcfifo",
-		dcfifo_component.lpm_width = 32,
+		dcfifo_component.lpm_width = D_BIT,
 		dcfifo_component.lpm_widthu = 8,
 		dcfifo_component.overflow_checking = "ON",
 		dcfifo_component.rdsync_delaypipe = 4,

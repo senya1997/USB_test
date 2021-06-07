@@ -19,9 +19,7 @@ eConnInfo USB_device::FT600_Connect(void)
     int desc_size = 0;
     FT_DEVICE_LIST_INFO_NODE *ptrInfo;
 
-    emit UpdLog("USB_device::FT600_Connect: Start");
-
-    USB_busy = true;
+    char *desc = nullptr;
 
 // check FTDI connect:
     ft600_drv->Cleanup();
@@ -30,43 +28,34 @@ eConnInfo USB_device::FT600_Connect(void)
     while(ptrInfo->Description[desc_size] != 0x00) ++desc_size; // calc descriptor string size in common info about connected FTDI
     ++desc_size;
 
-    char desc[desc_size];
+    desc = new char[desc_size];
 
     for(int i = 0; i < desc_size; ++i)
         desc[i] = ptrInfo->Description[i];
 
     if(!ft600_drv->Initialize(EOPEN_BY_DESC, (PVOID)desc, (PVOID)g_chSerialNumber))
     {
-        emit UpdFTDIDesc("Init error");
-        emit UpdLog("USB_device::FT600_Connect: Error initialization");
+        delete[] desc;
+        desc = nullptr;
+
         return conn_err_init;
     }
 
 // check descriptor:
-    if(QString::compare(desc, DEVICE_NAME120) == 0)
-    {
-        emit SetCycloneLEs(true);
+    if(strcmp(desc, DEVICE_NAME120) == 0)
         cyclone_LEs = true;
-    }
-    else if(QString::compare(desc, DEVICE_NAME080) == 0)
-    {
-        emit SetCycloneLEs(false);
+    else if(strcmp(desc, DEVICE_NAME080) == 0)
         cyclone_LEs = false;
-    }
     else
     {
-        emit UpdFTDIDesc("Wrong descriptor");
-        emit UpdLog("USB_device::FT600_Connect: Init succsess but wrong descriptor");
-
-        USB_busy = false;
+        delete[] desc;
+        desc = nullptr;
 
         return conn_wrong_desc;
     }
 
-    emit UpdFTDIDesc((QString)desc);
-    emit UpdLog("USB_device::FT600_Connect: Successful");
-
-    USB_busy = false;
+    delete[] desc;
+    desc = nullptr;
 
     return conn_ok;
 }
@@ -78,14 +67,10 @@ bool USB_device::FT600_Disconnect(void)
         delete ft600_drv;
         ft600_drv = nullptr;
 
-        emit UpdLog("USB_device::FT600_DisConnect: Success disconnect FTDI");
         return true;
     }
     else
-    {
-        emit UpdLog("USB_device::FT600_DisConnect: Failure to disconnect FTDI");
         return false;
-    }
 }
 bool USB_device::FT600_Reconfig(bool force_reconf, bool ui_cyclone_LEs)
 {
@@ -95,10 +80,7 @@ bool USB_device::FT600_Reconfig(bool force_reconf, bool ui_cyclone_LEs)
     bool isCorrected = false;
     bool in_force_reconf;
 
-    emit UpdLog("USB_device::FT600_Reconfig: Start");
-
     prog_value = 0;
-    emit UpdProgBar(0);
 
     ftdi_connect = FT600_Connect();
 
@@ -110,17 +92,12 @@ bool USB_device::FT600_Reconfig(bool force_reconf, bool ui_cyclone_LEs)
         in_force_reconf = false;
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
 // read configuration:
     if (!ft600_drv->ReadChipConfiguration(&oConfigurationData))
-    {
-        emit UpdLog("USB_device::FT600_Reconfig: Can not read FTDI configuration");
         return false;
-    }
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
 // change descriptor if needed:
     if(in_force_reconf)
@@ -161,82 +138,70 @@ bool USB_device::FT600_Reconfig(bool force_reconf, bool ui_cyclone_LEs)
     }
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
 //Пишем, если корректировалась
     if (isCorrected)
     {
         if (!ft600_drv->WriteChipConfiguration(&oConfigurationData))
-        {
-            emit UpdLog("USB_device::FT600_Reconfig: Failure configuration FTDI");
             return false;
-        }
 
-        QThread::msleep(1000);
+        this_thread::sleep_for(1s);
     }
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
     if(FT600_Connect() == conn_err_init)
-    {
-        emit UpdLog("USB_device::FT600_Reconfig: Failure reconfig descriptor");
         return false;
-    }
-
-    ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
     SetFPGAPower(Pwr_ON);
 
-    emit UpdLog("USB_device::FT600_Reconfig: Successful, FPGA power is ON");
-
-    USB_busy = false;
-
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_RECONF));
 
     return true;
 }
 
-eProgInfo USB_device::FPGAProg(QString FileName, bool ui_data_width)       //  Загрузка прошивки FPGA
+eProgInfo USB_device::FPGAProg(string FileName, bool ui_data_width)       //  Загрузка прошивки FPGA
 {
     FT_STATUS ftStatus;
-    ULONG ulActualBytesWritten = 0;
+    ulong ulActualBytesWritten = 0;
+
+    ifstream rbf_file(FileName);
+    ulong rbf_size;
+
+    char *databuf = nullptr;
+    ulong *databuf32_load = nullptr;
+    ushort *databuf16_load = nullptr;
+
+    ulong DATA1_CLOCK0;
+    ulong DATA1_CLOCK1;
+    ulong DATA0_CLOCK0;
+    ulong DATA0_CLOCK1;
+
+    uint32_t k = 0;
 
     prog_value = 0;
-    emit UpdProgBar(0);
-    emit UpdLog("USB_device::FPGALoad: Start");
 
     //if(!FT600_Reconfig(false, ui_cyclone_LEs))
     //    return prog_err_reconf;
 
-    QFile SrcFileChipZ64(FileName);
-
-    if (!SrcFileChipZ64.open(QIODevice::ReadOnly))
-    {
-        emit UpdLog("USB_device::FPGALoad: '.rbf' file not openned");
+    if (!rbf_file.is_open())
         return prog_err_open_file;
-    }
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_PROG));
 
 /*******************************************************************************************************************************/
 
-    ULONG uChipZ64Size = (ULONG)SrcFileChipZ64.size();
+    rbf_file.seekg(0, ios::end); // 1 char = 1 byte => go to the end of file and get position of cursor
+        rbf_size = rbf_file.tellg(); // in byte
+    rbf_file.seekg(0, ios::beg); // return position in begin
 
-    char *databuf = new char[uChipZ64Size];
-    ULONG *databuf32_load = new ULONG[uChipZ64Size * WORDS_4SEND_BYTE];
-    USHORT *databuf16_load = new USHORT[uChipZ64Size * WORDS_4SEND_BYTE];
+    databuf = new char[rbf_size];
 
-    ULONG DATA1_CLOCK0;
-    ULONG DATA1_CLOCK1;
-    ULONG DATA0_CLOCK0;
-    ULONG DATA0_CLOCK1;
+    if(ui_data_width)   databuf16_load = new ushort[rbf_size * WORDS_4SEND_BYTE];
+    else                databuf32_load = new ulong[rbf_size * WORDS_4SEND_BYTE];
 
-    SrcFileChipZ64.read(databuf, uChipZ64Size);
-    SrcFileChipZ64.close();
+    rbf_file.read(databuf, rbf_size);
+    rbf_file.close();
 
     if(ui_data_width) // 16 bit FTDI
     {
@@ -266,23 +231,21 @@ eProgInfo USB_device::FPGAProg(QString FileName, bool ui_data_width)       //  �
 
 // nConfig
     ft600_drv->WriteGPIO(1, 0);
-        Sleep(2);
+        this_thread::sleep_for(2s);
     ft600_drv->WriteGPIO(1, 1);
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_PROG));
 
-    quint32 k = 0;
-    for(quint32 j = 0; j < uChipZ64Size; ++j)
+    for(uint32_t j = 0; j < rbf_size; ++j)
     {
-        for(quint32 i = 0; i < 8; ++i)
+        for(uint32_t i = 0; i < 8; ++i)
         {
             if((databuf[j] >> i) & 1)
             {
                 if(ui_data_width)
                 {
-                    databuf16_load[k++] = (USHORT)DATA1_CLOCK0;  //data = 1 clock = 0
-                    databuf16_load[k++] = (USHORT)DATA1_CLOCK1;  //data = 1 clock = 1
+                    databuf16_load[k++] = (ushort)DATA1_CLOCK0;  //data = 1 clock = 0
+                    databuf16_load[k++] = (ushort)DATA1_CLOCK1;  //data = 1 clock = 1
                 }
                 else
                 {
@@ -294,8 +257,8 @@ eProgInfo USB_device::FPGAProg(QString FileName, bool ui_data_width)       //  �
             {
                 if(ui_data_width)
                 {
-                    databuf16_load[k++] = (USHORT)DATA0_CLOCK0;  //data = 0 clock = 0
-                    databuf16_load[k++] = (USHORT)DATA0_CLOCK1;  //data = 0 clock = 1
+                    databuf16_load[k++] = (ushort)DATA0_CLOCK0;  //data = 0 clock = 0
+                    databuf16_load[k++] = (ushort)DATA0_CLOCK1;  //data = 0 clock = 1
                 }
                 else
                 {
@@ -309,30 +272,22 @@ eProgInfo USB_device::FPGAProg(QString FileName, bool ui_data_width)       //  �
 /*******************************************************************************************************************************/
 
     ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_PROG));
 
-    if(ui_data_width)   ftStatus = ft600_drv->WritePipe(0x02, (UCHAR*)(databuf16_load), uChipZ64Size * WORDS_4SEND_BYTE * 2, &ulActualBytesWritten, NULL);
-    else                ftStatus = ft600_drv->WritePipe(0x02, (UCHAR*)(databuf32_load), uChipZ64Size * WORDS_4SEND_BYTE * 4, &ulActualBytesWritten, NULL);
-
-    if (ftStatus != FT_OK)
-    {
-        emit UpdLog("USB_device::FPGALoad: Function WritePipe failed (check Power)");
-
-        delete[] databuf;
-        delete[] databuf16_load;
-        delete[] databuf32_load;
-
-        return prog_err_wr;
-    }
-
-    ++prog_value;
-    emit UpdProgBar((int)((float)prog_value*100/USB_PROG));
+    if(ui_data_width)   ftStatus = ft600_drv->WritePipe(0x02, (UCHAR*)(databuf16_load), rbf_size * WORDS_4SEND_BYTE * 2, &ulActualBytesWritten, NULL);
+    else                ftStatus = ft600_drv->WritePipe(0x02, (UCHAR*)(databuf32_load), rbf_size * WORDS_4SEND_BYTE * 4, &ulActualBytesWritten, NULL);
 
     delete[] databuf;
     delete[] databuf16_load;
     delete[] databuf32_load;
 
-    emit UpdLog("USB_device::FPGALoad: Successful load '.rbf' in FPGA");
+    databuf = nullptr;
+    databuf16_load = nullptr;
+    databuf32_load = nullptr;
+
+    if (ftStatus != FT_OK)
+        return prog_err_wr;
+
+    ++prog_value;
 
     return prog_ok;
 }
@@ -341,55 +296,28 @@ bool USB_device::UsbWriteBuff(UCHAR* DataBuff, int BNum)
 {
     FT_STATUS ftStatus = FT_OK;             //	Статус операции записи
 
-    ULONG ulActualBytesWritten = 0;			//	Колличество записанных байтов
-
-    USB_busy = true;
-
-    emit UpdLog("USB_device::UsbWrite: Start send data array to FPGA");
+    ulong ulActualBytesWritten = 0;			//	Колличество записанных байтов
 
     ftStatus = ft600_drv->WritePipe(0x02, (PUCHAR)DataBuff, BNum, &ulActualBytesWritten, NULL);	//	Загрузка массива данных в ПЛИС
 
-    USB_busy = false;
-
     if (ftStatus == FT_OK)
-    {
-        emit UpdLog("USB_device::UsbWrite: Success write data");
         return true;
-    }
     else
-    {
-        emit UpdLog("USB_device::UsbWrite: Failure write data");
         return false;
-    }
 }
-bool USB_device::UsbReadBuff(unsigned Readchars, ULONG* p_uLengthTransfered, UCHAR* ReadBuff) // Сколько считать, Сколько считать получилось, Куда считывать
+bool USB_device::UsbReadBuff(unsigned Readchars, ulong* p_uLengthTransfered, UCHAR* ReadBuff) // Сколько считать, Сколько считать получилось, Куда считывать
 {
     FT_STATUS ftStatus = FT_OK;						//	Статус операции записи
-
-    //	ULONG RdCnt = 0;							//	Колличество байтов считанных за одну операцию чтения
 
     //	If lpOverlapped is NULL, FT_ReadPipe operates synchronously, that is, it returns only when
     //	the transfer has been completed.
 
-    Q_ASSERT(ft600_drv);
-    Q_ASSERT(ReadBuff);
-
-    USB_busy = true;
-
     ftStatus = ft600_drv->ReadPipe(0x82, ReadBuff, Readchars, p_uLengthTransfered, NULL);
 
-    USB_busy = false;
-
     if (ftStatus == FT_OK)
-    {
-        emit UpdLog("USB_device::UsbReadBuff: Success read data");
         return true;
-    }
     else
-    {
-        emit UpdLog("USB_device::UsbReadBuff: Failure read data");
         return false;
-    }
 }
 
 // private:
@@ -398,15 +326,11 @@ bool USB_device::UsbReadBuff(unsigned Readchars, ULONG* p_uLengthTransfered, UCH
         if (ePwr == Pwr_ON) ft600_drv->WriteGPIO(2, 3);// вкл питание
         else ft600_drv->WriteGPIO(2, 0);// выкл питание
 
-        Sleep(100);
+        this_thread::sleep_for(100ms);
         return 0;
     }
 
 // setter/getter:
-    bool USB_device::getUSB_busy() const
-    {
-        return USB_busy;
-    }
     bool USB_device::getCyclone_LEs() const
     {
         return cyclone_LEs;

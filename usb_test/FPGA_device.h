@@ -5,12 +5,11 @@
 #include <QTextStream>
 
 #include <QThread>
-#include <QObject>
+//#include <QObject>
 
-#include <QTimer>
+//#include <QTimer>
 
 #include "defines.h"
-
 #include "USB_device.h"
 
 class FPGA_device : public QObject
@@ -21,23 +20,18 @@ class FPGA_device : public QObject
            FPGA_device();
            ~FPGA_device();
 
-           bool Initialize(QString RbfFileName); // Начальная инициализация устройства
+           eInitInfo Initialize(bool force_reconf, bool ui_cyclone_LEs); // Начальная инициализация устройства
 
-           bool StartTest(QString HexFileName);
+           eProgInfo Program(QString RbfFileName, bool def_path, bool ui_data_width, bool ui_cyclone_LEs);
 
-           bool SetDepParameters();
+           eTestInfo StartTest(QString HexFileName, bool ui_data_width);
 
     signals:
            void UpdLog(QString log_str);
            void UpdProgBar(int prog_value);
 
-           bool GetDataWidth();
-           bool GetCycloneLEs();
+           void SetDataWidth(bool data_width);
            void SetCycloneLEs(bool cyclone_LEs);
-
-           bool GetChBoxDefPath();
-
-           void ShowMsg(QString title, QString msg);
 
            void UpdRbfPath(QString rbf_path);
            void UpdFTDIDesc(QString desc);
@@ -51,10 +45,7 @@ class FPGA_device : public QObject
 
            void UpdFTDIDescBridge(QString desc);
 
-           bool GetCycloneLEsBridge();
            void SetCycloneLEsBridge(bool cyclone_LEs);
-
-           void ShowMsgBridge(QString title, QString msg);
 
     private:
            USB_device *usb_device = nullptr;
@@ -62,6 +53,8 @@ class FPGA_device : public QObject
            //int prog_value;
 
            USHORT CurrFPGAVer;
+
+           //void ShowBuff();
 };
 
 #endif
