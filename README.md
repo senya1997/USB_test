@@ -1,48 +1,50 @@
-# Работа #
+## Starting ##
 
-### GUI версия ###
+Program using for test connect and check each bit on bus between FPGA Altera Cyclone V CL080 or CL120 and FTDI60x. FPGA program through FTDI using ```.rbf``` file.
 
-* При запуске происходит подключение к FTDI, чтение десктриптора.
+### GUI version ###
 
-* Для теста сначала требуется прошить ПЛИС через 'Program FPGA':
+1. At the startup, there is a connection to FTDI, reading the descriptor.
 
-* Если в FTDI корректный дескриптор, то файл прошивки выбирается автоматически исходя из записанного дескриптора 
-(CL120 или CL080), в этом случае выбор 'Cyclone LEs:' игнорируется и выставится в соответствии с дескриптором.
+2. For the test, you first need to program the FPGA through the ```Program FPGA``` button.
 
-* Если в FTDI некорректный дескриптор (при запуске в поле 'FTDI description:' будет 'Wrong descriptor'), файл прошивки и
-то что будет записано в FTDI берется из 'Cyclone LEs:'.
+3. If the FTDI has the correct descriptor, the firmware file is selected automatically based on the recorded descriptor
+   (CL120 or CL080), in this case the choice is ```Cyclone LEs:``` radio button is ignored and will be set according to the descriptor.
 
-* Если по ошибке был записан неверный дескриптор (для CL120 был записан CL080 и наоборот), то можно в FTDI записать
-нужный дескриптор принудительно через 'Force prog FTDI' и выбрать нужный через 'Cyclone LEs:'.
+4. If FTDI has an incorrect descriptor (when running in the ```FTDI description``` field will be ```Wrong descriptor```), the firmware FPGA and FTDI files is chooses from ```Cyclone LEs:``` radio button.
 
-* Выбор 'FTDI data width:' (FT600/FT601) требуется производить вручную всегда.
+5. If an incorrect descriptor was written by mistake (CL080 was written for CL120 and vice versa), then you can write in FTDI
+   the desired descriptor is forced through ```Force prog FTDI``` button and select the desired one through ```Cyclone LEs:``` radio button.
 
-* После успешного программирования ПЛИС, считается версия и дата прошивки ПЛИС в поля 'Firmware ver/date:'.
+6. The selection of ```FTDI data width:``` (FT600/FT601) must always be done manually.
 
-* Далее требуется запустить тест 'Start test'.
+7. After successful FPGA programming, the FPGA firmware version and date are counted in the ```Firmware ver/date:``` fields.
 
-* Основная информация об ошибках и возможных причинах выводится в основном окне, а в 'show log' выводится цепочка
-вызовов функций и массив записанных в ПЛИС тестовых данных, при ошибке теста выводятся битые данные в формате 
-'что было отправлено - что пришло' в HEX коде.
+8. Then you need to run the ```Start test``` button.
 
-### Консольная версия ###
+9. Basic information about errors and possible causes is displayed in the main window, and a chain is displayed in the ```show log```:
+   function calls and an array of test data recorded in the FPGA, in case of a test error, broken data is output in the format
+   "what was sent - what came"' in HEX code.
 
-* Ключи: порядок и регистр не важен, могут быть заданы один или два ключа, по умолчанию при запуске без параметров используется FT601 и CL080.
-* Вариант CL120 и FT600 не используется - заменится один из параметров.
-* Вся информация о работе и тестовых данных пишется в 'log' файл, при ошибке теста записываются битые данные в формате 'что было отправлено - что пришло' в HEX коде.
+### Console version ###
+
+* Keys: order and case are not important, one or two keys can be set, FT601 and CL080 are used by default when starting without parameters.
+* The CL120 and FT600 option is not used - one of the parameters will be replaced.
+* All information about the work and test data is written to the log file, in case of a test error, broken data is written in the format "what was sent - what came"' in HEX code.
+
 ***
-	Выбор FPGA: -CL120 или -CL080
-	Выбор FTDI: -FT600 или -FT601
+	Choose FPGA: -CL120 or -CL080
+	Choose FTDI: -FT600 or -FT601
 ***
 
-# Комментарии #
+### Comments ###
 
-### Компиляция verilog ###
+##### Verilog compilation: #####
 
-* Через tcl 'usb_test' - обновятся 'rbf' всех ревизий.
-* При копмиляции отдельных ревизий - перед запуском выполнится tcl 'pre_usb_test'.
+* In tcl ```usb_test``` - the ```.rbf``` of all revisions will be updated.
+* When compile individual revisions, tcl ```pre_usb_test``` will be executed before starting.
 
-### Замечания ###
+##### Remarks: #####
 
-* 'Build number' в файле 'defines' один на все 'rbf', т.е. при запуске компиляции всех ревизий - 'Build number' инкрементируется для каждого отдельно и будет у всех 'rbf' разный.
-* Если прошить ПЛИС удалось не с первого раза, то тест на первой итерации может дать ошибку, потому что в буфере FTDI мусор, поэтому тест запускается несколько раз.
+* Build number in the define file is one for all, i.e. when compiling all revisions, build number is incremented for each separately and all output files will be different.
+* If it was not possible to flash the FPGA the first time - the test on the first iteration may give an error, because there is garbage in the FTDI buffer, so should run the test several times.
